@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beoordelingsformulier</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f3f4f6;
+            --text-color: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+        }
+
+        .form-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .category {
+            background-color: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .category-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .questions {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+            padding-left: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .rating {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .rating input[type="radio"] {
+            display: none;
+        }
+
+        .rating label {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            text-align: center;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+
+        .rating input[type="radio"]:checked + label {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .container {
+                padding: 1rem;
+                margin: 0 0.5rem;
+                width: calc(100% - 1rem);
+                max-width: 100%;
+            }
+
+            .form-header {
+                grid-template-columns: 1fr;
+            }
+
+            .category {
+                padding: 1rem;
+            }
+
+            .rating {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            .rating label {
+                width: 100%;
+                padding: 0.6rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .questions {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Team Ideeën Beoordelingsformulier</h1>
+        <form id="evaluationForm">
+            <div class="form-header">
+                <div class="form-group">
+                    <label for="evaluatorName">Jouw naam</label>
+                    <input type="text" id="evaluatorName" name="evaluatorName" required>
+                </div>
+                <div class="form-group">
+                    <label for="teamSelect">Selecteer het team dat je beoordeelt</label>
+                    <select id="teamSelect" name="teamSelect" required>
+                        <option value="">Kies een team</option>
+                        <option value="team1">Team 1</option>
+                        <option value="team2">Team 2</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="category">
+                <div class="category-header">1. Spelconcept</div>
+                <div class="questions">
+                    <div>• Is het idee origineel en vernieuwend?</div>
+                    <div>• Is het spel dagelijks herhaalbaar en aantrekkelijk?</div>
+                </div>
+                <div class="rating">
+                    <input type="radio" id="concept1" name="concept" value="1" required>
+                    <label for="concept1">1</label>
+                    <input type="radio" id="concept2" name="concept" value="2">
+                    <label for="concept2">2</label>
+                    <input type="radio" id="concept3" name="concept" value="3">
+                    <label for="concept3">3</label>
+                    <input type="radio" id="concept4" name="concept" value="4">
+                    <label for="concept4">4</label>
+                    <input type="radio" id="concept5" name="concept" value="5">
+                    <label for="concept5">5</label>
+                </div>
+            </div>
+
+            <div class="category">
+                <div class="category-header">2. Doelgroep</div>
+                <div class="questions">
+                    <div>• Is de doelgroep duidelijk gedefinieerd (leeftijd, interesses)?</div>
+                    <div>• Spreekt het spel de doelgroep goed aan?</div>
+                </div>
+                <div class="rating">
+                    <input type="radio" id="target1" name="target" value="1" required>
+                    <label for="target1">1</label>
+                    <input type="radio" id="target2" name="target" value="2">
+                    <label for="target2">2</label>
+                    <input type="radio" id="target3" name="target" value="3">
+                    <label for="target3">3</label>
+                    <input type="radio" id="target4" name="target" value="4">
+                    <label for="target4">4</label>
+                    <input type="radio" id="target5" name="target" value="5">
+                    <label for="target5">5</label>
+                </div>
+            </div>
+
+            <div class="category">
+                <div class="category-header">3. Gameplay</div>
+                <div class="questions">
+                    <div>• Is het duidelijk hoe het spel werkt?</div>
+                    <div>• Is het spel leuk en uitdagend genoeg om te spelen?</div>
+                </div>
+                <div class="rating">
+                    <input type="radio" id="gameplay1" name="gameplay" value="1" required>
+                    <label for="gameplay1">1</label>
+                    <input type="radio" id="gameplay2" name="gameplay" value="2">
+                    <label for="gameplay2">2</label>
+                    <input type="radio" id="gameplay3" name="gameplay" value="3">
+                    <label for="gameplay3">3</label>
+                    <input type="radio" id="gameplay4" name="gameplay" value="4">
+                    <label for="gameplay4">4</label>
+                    <input type="radio" id="gameplay5" name="gameplay" value="5">
+                    <label for="gameplay5">5</label>
+                </div>
+            </div>
+
+            <div class="category">
+                <div class="category-header">4. Unieke twist</div>
+                <div class="questions">
+                    <div>• Wat maakt dit spel anders dan bestaande spellen zoals Wordle of Tradle?</div>
+                    <div>• Is er een originele of verrassende toevoeging?</div>
+                </div>
+                <div class="rating">
+                    <input type="radio" id="unique1" name="unique" value="1" required>
+                    <label for="unique1">1</label>
+                    <input type="radio" id="unique2" name="unique" value="2">
+                    <label for="unique2">2</label>
+                    <input type="radio" id="unique3" name="unique" value="3">
+                    <label for="unique3">3</label>
+                    <input type="radio" id="unique4" name="unique" value="4">
+                    <label for="unique4">4</label>
+                    <input type="radio" id="unique5" name="unique" value="5">
+                    <label for="unique5">5</label>
+                </div>
+            </div>
+
+            <div class="category">
+                <div class="category-header">5. Technische haalbaarheid</div>
+                <div class="questions">
+                    <div>• Is het idee technisch uitvoerbaar?</div>
+                    <div>• Zijn de juiste tools en platforms gekozen om het spel te bouwen?</div>
+                </div>
+                <div class="rating">
+                    <input type="radio" id="technical1" name="technical" value="1" required>
+                    <label for="technical1">1</label>
+                    <input type="radio" id="technical2" name="technical" value="2">
+                    <label for="technical2">2</label>
+                    <input type="radio" id="technical3" name="technical" value="3">
+                    <label for="technical3">3</label>
+                    <input type="radio" id="technical4" name="technical" value="4">
+                    <label for="technical4">4</label>
+                    <input type="radio" id="technical5" name="technical" value="5">
+                    <label for="technical5">5</label>
+                </div>
+            </div>
+
+            <div class="category">
+                <div class="category-header">6. Uitdagingen en moeilijkheid</div>
+                <div class="questions">
+                    <div>• Is het spel uitdagend genoeg voor de speler?</div>
+                    <div>• Is er een goede balans tussen moeilijkheid en plezier?</div>
+                </div>
+                <div class="rating">
+                    <input type="radio" id="challenge1" name="challenge" value="1" required>
+                    <label for="challenge1">1</label>
+                    <input type="radio" id="challenge2" name="challenge" value="2">
+                    <label for="challenge2">2</label>
+                    <input type="radio" id="challenge3" name="challenge" value="3">
+                    <label for="challenge3">3</label>
+                    <input type="radio" id="challenge4" name="challenge" value="4">
+                    <label for="challenge4">4</label>
+                    <input type="radio" id="challenge5" name="challenge" value="5">
+                    <label for="challenge5">5</label>
+                </div>
+            </div>
+
+            <div class="category">
+                <div class="category-header">7. Beloningen en scoring</div>
+                <div class="questions">
+                    <div>• Is er een duidelijk en motiverend beloningssysteem?</div>
+                    <div>• Is duidelijk hoe de voortgang van spelers wordt bijgehouden (punten/statistieken)?</div>
+                </div>
+                <div class="rating">
+                    <input type="radio" id="rewards1" name="rewards" value="1" required>
+                    <label for="rewards1">1</label>
+                    <input type="radio" id="rewards2" name="rewards" value="2">
+                    <label for="rewards2">2</label>
+                    <input type="radio" id="rewards3" name="rewards" value="3">
+                    <label for="rewards3">3</label>
+                    <input type="radio" id="rewards4" name="rewards" value="4">
+                    <label for="rewards4">4</label>
+                    <input type="radio" id="rewards5" name="rewards" value="5">
+                    <label for="rewards5">5</label>
+                </div>
+            </div>
+
+            <button type="submit">Beoordeling Versturen</button>
+        </form>
+    </div>
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>

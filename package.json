@@ -1,0 +1,20 @@
+{
+  "name": "beoordelingsformulier",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.8",
+    "dotenv": "^16.4.7",
+    "vite": "^6.0.3"
+  }
+}
