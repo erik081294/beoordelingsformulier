@@ -4,119 +4,409 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Scores</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        window.ENV = {
+            SUPABASE_URL: 'https://jcwfcyddmvhnquwierds.supabase.co',
+            SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impjd2ZjeWRkbXZobnF1d2llcmRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ0NDMwODIsImV4cCI6MjA1MDAxOTA4Mn0.Ri3w5w4jrCTTgnxvZRtwHw5EHYy1Xzl1ZeW7eTXUJCU'
+        };
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-light: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --background-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-radius: 12px;
+            --spacing-unit: 8px;
+            --team1-color: #eab308;
+            --team2-color: #2563eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Arial', sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f0f0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: calc(var(--spacing-unit) * 3);
+            justify-content: center;
+            align-items: center;
         }
+
         .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: calc(var(--spacing-unit) * 6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .category-display {
-            font-size: 24px;
-            margin: 20px 0;
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
             text-align: center;
+            margin-bottom: calc(var(--spacing-unit) * 6);
+            color: var(--primary-color);
+        }
+
+        .category-display {
             opacity: 0;
             transform: translateY(20px);
-            transition: all 0.5s ease-out;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: calc(var(--spacing-unit) * 4) 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
         .category-display.visible {
             opacity: 1;
             transform: translateY(0);
         }
-        .team {
-            margin: 20px 0;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: #f8f9fa;
+
+        .category-display h2 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: calc(var(--spacing-unit) * 4);
+            color: var(--text-primary);
         }
-        .team1 { border-left: 5px solid #007bff; }
-        .team2 { border-left: 5px solid #28a745; }
+
+        .teams-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: calc(var(--spacing-unit) * 6);
+            margin-top: calc(var(--spacing-unit) * 4);
+            width: 100%;
+            padding: 0 calc(var(--spacing-unit) * 3);
+        }
+
+        .team {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 4);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+        }
+
+        .team1 {
+            border-left: 4px solid var(--team1-color);
+        }
+
+        .team2 {
+            border-left: 4px solid var(--team2-color);
+        }
+
+        .team h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: calc(var(--spacing-unit) * 3);
+            color: var(--text-primary);
+        }
+
+        .score-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-primary);
+            margin-top: auto;
+        }
+
         .button {
-            display: inline-block;
-            width: 200px;
-            margin: 20px 10px;
-            padding: 10px 20px;
-            background-color: #007bff;
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 18px;
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 4);
+            font-size: 1rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.2s ease;
+            min-width: 160px;
         }
+
         .button:hover {
-            background-color: #0056b3;
+            background-color: var(--primary-light);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+
         .button:disabled {
-            background-color: #cccccc;
+            background-color: var(--text-secondary);
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
-        .hidden {
-            display: none;
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: calc(var(--spacing-unit) * 3);
+            margin: calc(var(--spacing-unit) * 6) 0;
+            width: 100%;
         }
+
         .winner {
-            animation: winner 1s ease-in-out;
-            background-color: #e3f2fd;
+            animation: winner 1s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #ecfdf5;
+            border: 2px solid var(--success-color);
+            box-shadow: 0 0 20px rgba(5, 150, 105, 0.2);
         }
+
+        .winner.team1 {
+            background-color: #fef9c3;
+            border: 2px solid var(--team1-color);
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.2);
+        }
+
+        .winner.team2 {
+            background-color: #eff6ff;
+            border: 2px solid var(--team2-color);
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+        }
+
         @keyframes winner {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.03); }
             100% { transform: scale(1); }
         }
+
+        .category-announcement {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(15, 23, 42, 0.8);
+            opacity: 0;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .announcement-content {
+            background-color: var(--surface-color);
+            padding: calc(var(--spacing-unit) * 8);
+            border-radius: var(--border-radius);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            transform: scale(0.9);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .announcement-content .title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: calc(var(--spacing-unit) * 2);
+        }
+
+        .announcement-content .category {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .category-announcement.visible {
+            opacity: 1;
+        }
+
+        .category-announcement.visible .announcement-content {
+            transform: scale(1);
+        }
+
         .categories-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            max-width: 800px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: calc(var(--spacing-unit) * 6) 0;
             opacity: 0;
             transform: translateY(20px);
-            transition: all 0.5s ease-out;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         .categories-table.visible {
             opacity: 1;
             transform: translateY(0);
         }
+
         .categories-table th,
         .categories-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .categories-table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-        }
-        .winner-cell {
-            background-color: #28a745;
-            color: white;
-            font-weight: bold;
-        }
-        .buttons-container {
+            padding: calc(var(--spacing-unit) * 3);
             text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .categories-table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .categories-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .winner-cell {
+            background-color: #ecfdf5;
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .winner-cell.team1 {
+            background-color: #fef9c3;
+            color: var(--team1-color);
+        }
+
+        .winner-cell.team2 {
+            background-color: #eff6ff;
+            color: var(--team2-color);
+        }
+
+        #final-winner {
+            text-align: center;
+            padding: calc(var(--spacing-unit) * 6);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        #final-winner h2 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: calc(var(--spacing-unit) * 4);
+        }
+
+        #winner-announcement h3 {
+            font-size: 2rem;
+            color: var(--success-color);
+        }
+
+        .evaluator-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: calc(var(--spacing-unit) * 3);
+            margin-top: calc(var(--spacing-unit) * 4);
+            width: 100%;
+        }
+
+        .evaluator-card {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 4);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: calc(var(--spacing-unit) * 2);
+            text-align: center;
+        }
+
+        .evaluator-card .emoji {
+            font-size: 3.5rem;
+            line-height: 1;
+            margin-bottom: calc(var(--spacing-unit) * 2);
+        }
+
+        .evaluator-card .title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .evaluator-card .score {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: calc(var(--spacing-unit) * 2) 0;
+        }
+
+        .evaluator-card.positive {
+            border-left: 4px solid var(--success-color);
+            background-color: #f0fdf4;
+        }
+
+        .evaluator-card.negative {
+            border-left: 4px solid var(--danger-color);
+            background-color: #fef2f2;
+        }
+
+        .evaluator-card .name {
+            font-size: 1.125rem;
+            font-weight: 500;
+        }
+
+        .evaluator-card .team {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: calc(var(--spacing-unit));
+        }
+
+        @media (max-width: 768px) {
+            .teams-container {
+                grid-template-columns: 1fr;
+            }
+
+            .category-announcement {
+                font-size: 2rem;
+                padding: calc(var(--spacing-unit) * 4);
+                width: 90%;
+            }
+
+            .evaluator-cards {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Team Scores 🏆</h1>
+        <h1>Teamscores 🏆</h1>
         
         <div id="current-category" class="category-display">
             <h2 id="category-name"></h2>
-            <div class="team team1">
-                <h3>Team 1</h3>
-                <div class="score-display" id="team1-score"></div>
-            </div>
-            
-            <div class="team team2">
-                <h3>Team 2</h3>
-                <div class="score-display" id="team2-score"></div>
+            <div class="teams-container">
+                <div class="team team1">
+                    <h3>Team Geel</h3>
+                    <div class="score-display" id="team1-score"></div>
+                </div>
+                
+                <div class="team team2">
+                    <h3>Team Blauw</h3>
+                    <div class="score-display" id="team2-score"></div>
+                </div>
             </div>
         </div>
 
@@ -129,8 +419,8 @@
             <thead>
                 <tr>
                     <th>Categorie</th>
-                    <th>Team 1</th>
-                    <th>Team 2</th>
+                    <th>Team Geel</th>
+                    <th>Team Blauw</th>
                     <th>Winnaar</th>
                 </tr>
             </thead>
@@ -141,6 +431,9 @@
         <div id="final-winner" class="category-display hidden">
             <h2>🏆 Eindwinnaar 🏆</h2>
             <div id="winner-announcement"></div>
+            <button class="button" id="copyScoreButton" style="margin-top: 24px;">
+                Kopieer Score 📋
+            </button>
         </div>
     </div>
 
@@ -149,62 +442,154 @@
 
         // Initialize Supabase client when environment variables are available
         function initSupabase() {
+            console.log('Initializing Supabase...');
+            console.log('window.ENV:', window.ENV);
+            
             if (!window.ENV) {
-                console.error('Environment variables not found');
+                console.error('Environment variables not found in window.ENV');
                 return;
             }
-            const { createClient } = supabase;
-            supabaseClient = createClient(window.ENV.SUPABASE_URL, window.ENV.SUPABASE_KEY);
+
+            console.log('SUPABASE_URL:', window.ENV.SUPABASE_URL);
+            console.log('SUPABASE_KEY exists:', !!window.ENV.SUPABASE_KEY);
+
+            if (!window.ENV.SUPABASE_URL || !window.ENV.SUPABASE_KEY) {
+                console.error('Missing required Supabase credentials:');
+                console.error('- SUPABASE_URL exists:', !!window.ENV.SUPABASE_URL);
+                console.error('- SUPABASE_KEY exists:', !!window.ENV.SUPABASE_KEY);
+                return;
+            }
+
+            try {
+                console.log('Creating Supabase client...');
+                if (typeof supabase === 'undefined') {
+                    console.error('Supabase library is not loaded');
+                    return;
+                }
+                
+                supabaseClient = supabase.createClient(window.ENV.SUPABASE_URL, window.ENV.SUPABASE_KEY);
+                console.log('Supabase client created successfully');
+            } catch (error) {
+                console.error('Error creating Supabase client:', error);
+            }
         }
 
         const categories = [
-            { id: 'concept', name: 'Spelconcept', dbField: 'concept_score' },
-            { id: 'target', name: 'Doelgroep', dbField: 'target_score' },
-            { id: 'gameplay', name: 'Gameplay', dbField: 'gameplay_score' },
-            { id: 'unique', name: 'Unieke twist', dbField: 'unique_score' },
-            { id: 'technical', name: 'Technische haalbaarheid', dbField: 'technical_score' },
-            { id: 'challenge', name: 'Uitdagingen en moeilijkheid', dbField: 'challenge_score' },
-            { id: 'rewards', name: 'Beloningen en scoring', dbField: 'rewards_score' }
+            { id: 'concept', name: 'Spelconcept', emoji: '💡', dbField: 'concept_score' },
+            { id: 'target', name: 'Doelgroep', emoji: '🎯', dbField: 'target_score' },
+            { id: 'gameplay', name: 'Gameplay', emoji: '🎮', dbField: 'gameplay_score' },
+            { id: 'unique', name: 'Unieke twist', emoji: '✨', dbField: 'unique_score' },
+            { id: 'technical', name: 'Technische haalbaarheid', emoji: '⚙️', dbField: 'technical_score' },
+            { id: 'challenge', name: 'Uitdagingen en moeilijkheid', emoji: '🏋️‍♂️', dbField: 'challenge_score' },
+            { id: 'rewards', name: 'Beloningen en scoring', emoji: '🏆', dbField: 'rewards_score' }
         ];
 
         let currentCategoryIndex = -1;
         let scores = [];
         let team1Wins = 0;
         let team2Wins = 0;
+        let evaluatorStats = [];
 
         async function fetchScores() {
-            const { data, error } = await supabaseClient
-                .from('scores')
-                .select('team_name, concept_score, target_score, gameplay_score, unique_score, technical_score, challenge_score, rewards_score');
-
-            if (error) {
-                console.error('Error fetching scores:', error);
+            console.log('Fetching scores...');
+            if (!supabaseClient) {
+                console.error('Supabase client is not initialized');
                 return;
             }
 
-            // Calculate averages per team per category
-            categories.forEach(category => {
-                const team1Scores = data.filter(row => row.team_name === 'team1').map(row => row[category.dbField]);
-                const team2Scores = data.filter(row => row.team_name === 'team2').map(row => row[category.dbField]);
+            try {
+                console.log('Making Supabase query...');
+                const { data, error } = await supabaseClient
+                    .from('evaluations')
+                    .select('evaluator_name, team_name, concept_score, target_score, gameplay_score, unique_score, technical_score, challenge_score, rewards_score');
 
-                const team1Avg = team1Scores.reduce((a, b) => a + b, 0) / team1Scores.length;
-                const team2Avg = team2Scores.reduce((a, b) => a + b, 0) / team2Scores.length;
+                if (error) {
+                    console.error('Error fetching scores:', error);
+                    return;
+                }
 
-                scores.push({
-                    category: category.name,
-                    team1Score: team1Avg.toFixed(2),
-                    team2Score: team2Avg.toFixed(2)
+                console.log('Received data:', data);
+
+                // Calculate evaluator statistics
+                data.forEach(row => {
+                    const categoryScores = [
+                        row.concept_score,
+                        row.target_score,
+                        row.gameplay_score,
+                        row.unique_score,
+                        row.technical_score,
+                        row.challenge_score,
+                        row.rewards_score
+                    ];
+                    
+                    const averageScore = categoryScores.reduce((a, b) => a + b, 0) / categoryScores.length;
+                    
+                    evaluatorStats.push({
+                        name: row.evaluator_name,
+                        team: row.team_name,
+                        averageScore: averageScore
+                    });
                 });
-            });
+
+                // Calculate averages per team per category
+                categories.forEach(category => {
+                    console.log(`Processing category: ${category.name}`);
+                    const team1Scores = data.filter(row => row.team_name === 'yellow').map(row => row[category.dbField]);
+                    const team2Scores = data.filter(row => row.team_name === 'blue').map(row => row[category.dbField]);
+
+                    console.log(`Team Geel scores for ${category.name}:`, team1Scores);
+                    console.log(`Team Blauw scores for ${category.name}:`, team2Scores);
+
+                    const team1Avg = team1Scores.length > 0 ? team1Scores.reduce((a, b) => a + b, 0) / team1Scores.length : 0;
+                    const team2Avg = team2Scores.length > 0 ? team2Scores.reduce((a, b) => a + b, 0) / team2Scores.length : 0;
+
+                    scores.push({
+                        category: category.name,
+                        team1Score: team1Avg.toFixed(2),
+                        team2Score: team2Avg.toFixed(2)
+                    });
+                });
+
+                console.log('Final processed scores:', scores);
+            } catch (error) {
+                console.error('Unexpected error in fetchScores:', error);
+            }
         }
 
-        function getEmoji(score) {
+        function getEmoji(score, isWinner = false) {
+            if (isWinner) return '🥳';
+            
             score = parseFloat(score);
             if (score >= 4.5) return '🤩';
             if (score >= 3.5) return '😄';
             if (score >= 2.5) return '🙂';
             if (score >= 1.5) return '😕';
             return '😭';
+        }
+
+        function animateCounter(element, finalScore, isWinner = false, duration = 2000) {
+            const start = Date.now();
+            const startScore = 0;
+
+            function update() {
+                const currentTime = Date.now();
+                const elapsed = currentTime - start;
+                
+                if (elapsed < duration) {
+                    // Generate a random score that gets closer to the final score as time progresses
+                    const progress = elapsed / duration;
+                    const range = Math.max(0.5, 1 - progress); // Reduce the random range as we progress
+                    const currentScore = (progress * finalScore) + (Math.random() * range);
+                    element.textContent = currentScore.toFixed(2);
+                    requestAnimationFrame(update);
+                } else {
+                    // Final reveal with regular emoji first
+                    element.classList.add('score-reveal');
+                    element.textContent = `${finalScore} ${getEmoji(finalScore)}`;
+                }
+            }
+
+            update();
         }
 
         async function showCategory(index) {
@@ -214,29 +599,96 @@
             }
 
             const score = scores[index];
+            const category = categories.find(c => c.name === score.category);
+            
+            // Create and show category announcement
+            const announcement = document.createElement('div');
+            announcement.className = 'category-announcement';
+            
+            const content = document.createElement('div');
+            content.className = 'announcement-content';
+            
+            const title = document.createElement('div');
+            title.className = 'title';
+            title.textContent = '🔔🥊 Volgende ronde';
+            
+            const categoryText = document.createElement('div');
+            categoryText.className = 'category';
+            categoryText.innerHTML = `${category.emoji} ${score.category}`;
+            
+            content.appendChild(title);
+            content.appendChild(categoryText);
+            announcement.appendChild(content);
+            document.body.appendChild(announcement);
+            
+            // Trigger animation
+            setTimeout(() => {
+                announcement.classList.add('visible');
+            }, 100);
+
+            // Remove announcement and show scores after delay
+            setTimeout(() => {
+                announcement.classList.remove('visible');
+                setTimeout(() => {
+                    announcement.remove();
+                    showCategoryScores(score);
+                }, 500);
+            }, 2000);
+        }
+
+        function showCategoryScores(score) {
             const categoryDisplay = document.getElementById('current-category');
             categoryDisplay.classList.remove('visible');
             
             setTimeout(() => {
-                document.getElementById('category-name').textContent = score.category;
-                document.getElementById('team1-score').textContent = `${score.team1Score} ${getEmoji(score.team1Score)}`;
-                document.getElementById('team2-score').textContent = `${score.team2Score} ${getEmoji(score.team2Score)}`;
+                const category = categories.find(c => c.name === score.category);
+                document.getElementById('category-name').innerHTML = `${category.emoji} ${score.category}`;
+                const team1ScoreElement = document.getElementById('team1-score');
+                const team2ScoreElement = document.getElementById('team2-score');
+                
+                // Clear both scores immediately
+                team1ScoreElement.textContent = '';
+                team2ScoreElement.textContent = '';
+                
+                team1ScoreElement.classList.remove('score-reveal');
+                team2ScoreElement.classList.remove('score-reveal');
                 
                 categoryDisplay.classList.add('visible');
 
-                // Highlight winner
+                // Remove previous winner classes
                 const team1 = document.querySelector('.team1');
                 const team2 = document.querySelector('.team2');
                 team1.classList.remove('winner');
                 team2.classList.remove('winner');
 
-                if (parseFloat(score.team1Score) > parseFloat(score.team2Score)) {
-                    team1.classList.add('winner');
-                    team1Wins++;
-                } else if (parseFloat(score.team2Score) > parseFloat(score.team1Score)) {
-                    team2.classList.add('winner');
-                    team2Wins++;
-                }
+                const team1Score = parseFloat(score.team1Score);
+                const team2Score = parseFloat(score.team2Score);
+                const team1IsWinner = team1Score > team2Score;
+                const team2IsWinner = team2Score > team1Score;
+
+                // Start animations with regular emojis
+                animateCounter(team1ScoreElement, team1Score);
+                
+                // Delay second team's score reveal
+                setTimeout(() => {
+                    animateCounter(team2ScoreElement, team2Score, false, 1500);
+                    
+                    // Show winner after both scores are revealed and animations are complete
+                    setTimeout(() => {
+                        if (team1IsWinner) {
+                            team1.classList.add('winner');
+                            team1Wins++;
+                            team1ScoreElement.textContent = `${team1Score} 🥳`;
+                        } else if (team2IsWinner) {
+                            team2.classList.add('winner');
+                            team2Wins++;
+                            // Wait for team 2's animation to complete before showing winner emoji
+                            setTimeout(() => {
+                                team2ScoreElement.textContent = `${team2Score} 🥳`;
+                            }, 10);
+                        }
+                    }, 1800);
+                }, 2200);
 
                 document.getElementById('nextButton').disabled = false;
             }, 500);
@@ -254,12 +706,13 @@
                 const row = document.createElement('tr');
                 const team1Score = parseFloat(score.team1Score);
                 const team2Score = parseFloat(score.team2Score);
+                const category = categories.find(c => c.name === score.category);
                 
                 row.innerHTML = `
-                    <td>${score.category}</td>
-                    <td class="${team1Score > team2Score ? 'winner-cell' : ''}">${score.team1Score} ${getEmoji(score.team1Score)}</td>
-                    <td class="${team2Score > team1Score ? 'winner-cell' : ''}">${score.team2Score} ${getEmoji(score.team2Score)}</td>
-                    <td>${team1Score > team2Score ? 'Team 1' : (team2Score > team1Score ? 'Team 2' : 'Gelijkspel')}</td>
+                    <td>${category.emoji} ${score.category}</td>
+                    <td class="${team1Score > team2Score ? 'winner-cell team1' : ''}">${score.team1Score} ${getEmoji(score.team1Score)}</td>
+                    <td class="${team2Score > team1Score ? 'winner-cell team2' : ''}">${score.team2Score} ${getEmoji(score.team2Score)}</td>
+                    <td>${team1Score > team2Score ? '<span style="color: var(--team1-color)">Team Geel</span>' : (team2Score > team1Score ? '<span style="color: var(--team2-color)">Team Blauw</span>' : 'Gelijkspel')}</td>
                 `;
                 resultsBody.appendChild(row);
             });
@@ -267,30 +720,128 @@
             // Add total row
             const totalRow = document.createElement('tr');
             totalRow.innerHTML = `
-                <td><strong>Totaal gewonnen rondes</strong></td>
-                <td><strong>${team1Wins}</strong></td>
-                <td><strong>${team2Wins}</strong></td>
-                <td><strong>${team1Wins > team2Wins ? 'Team 1' : (team2Wins > team1Wins ? 'Team 2' : 'Gelijkspel')}</strong></td>
+                <td><strong>🎯 Totaal gewonnen rondes</strong></td>
+                <td><strong style="color: var(--team1-color)">${team1Wins}</strong></td>
+                <td><strong style="color: var(--team2-color)">${team2Wins}</strong></td>
+                <td><strong>${team1Wins > team2Wins ? '<span style="color: var(--team1-color)">Team Geel</span>' : (team2Wins > team1Wins ? '<span style="color: var(--team2-color)">Team Blauw</span>' : 'Gelijkspel')}</strong></td>
             `;
             resultsBody.appendChild(totalRow);
 
             resultsTable.classList.remove('hidden');
             setTimeout(() => resultsTable.classList.add('visible'), 100);
 
-            // Show final winner
+            // Show final winner and evaluator statistics
             const finalWinner = document.getElementById('final-winner');
             finalWinner.classList.remove('hidden');
-            document.getElementById('winner-announcement').innerHTML = 
-                `<h3>${team1Wins > team2Wins ? 'Team 1' : (team2Wins > team1Wins ? 'Team 2' : 'Gelijkspel')} 
-                 ${team1Wins !== team2Wins ? 'heeft gewonnen!' : ''} 
-                 (${team1Wins} vs ${team2Wins})</h3>`;
+
+            // Sort evaluators by average score
+            evaluatorStats.sort((a, b) => b.averageScore - a.averageScore);
+            const mostPositive = evaluatorStats[0];
+            const mostNegative = evaluatorStats[evaluatorStats.length - 1];
+
+            document.getElementById('winner-announcement').innerHTML = `
+                <h3>${team1Wins > team2Wins ? '<span style="color: var(--team1-color)">Team Geel</span> 🏆' : (team2Wins > team1Wins ? '<span style="color: var(--team2-color)">Team Blauw</span> 🏆' : 'Gelijkspel 🤝')} 
+                ${team1Wins !== team2Wins ? 'heeft gewonnen!' : ''} 
+                (${team1Wins} vs ${team2Wins})</h3>
+                <div class="evaluator-cards">
+                    <div class="evaluator-card positive">
+                        <div class="emoji">🌟</div>
+                        <div class="title">Meest positieve beoordelaar</div>
+                        <div class="score">${mostPositive.averageScore.toFixed(2)}</div>
+                        <div class="name">${mostPositive.name}</div>
+                        <div class="team">
+                            <span>Stemde op:</span>
+                            <strong style="color: ${mostPositive.team === 'yellow' ? 'var(--team1-color)' : 'var(--team2-color)'}">${mostPositive.team === 'yellow' ? 'Team Geel' : 'Team Blauw'}</strong>
+                            ${mostPositive.team === 'yellow' ? '👥' : '👥'}
+                        </div>
+                    </div>
+                    
+                    <div class="evaluator-card negative">
+                        <div class="emoji">🤔</div>
+                        <div class="title">Meest kritische beoordelaar</div>
+                        <div class="score">${mostNegative.averageScore.toFixed(2)}</div>
+                        <div class="name">${mostNegative.name}</div>
+                        <div class="team">
+                            <span>Stemde op:</span>
+                            <strong style="color: ${mostNegative.team === 'yellow' ? 'var(--team1-color)' : 'var(--team2-color)'}">${mostNegative.team === 'yellow' ? 'Team Geel' : 'Team Blauw'}</strong>
+                            ${mostNegative.team === 'yellow' ? '👥' : '👥'}
+                        </div>
+                    </div>
+                </div>
+            `;
             setTimeout(() => finalWinner.classList.add('visible'), 100);
         }
 
+        function calculateAverageScores() {
+            let team1Total = 0;
+            let team2Total = 0;
+            let team1Count = 0;
+            let team2Count = 0;
+
+            scores.forEach(score => {
+                team1Total += parseFloat(score.team1Score);
+                team2Total += parseFloat(score.team2Score);
+                team1Count++;
+                team2Count++;
+            });
+
+            return {
+                team1: (team1Total / team1Count).toFixed(2),
+                team2: (team2Total / team2Count).toFixed(2)
+            };
+        }
+
+        function formatScoreText() {
+            const averages = calculateAverageScores();
+            const isTeam1Winner = team1Wins > team2Wins || (team1Wins === team2Wins && parseFloat(averages.team1) > parseFloat(averages.team2));
+            const winner = isTeam1Winner ? 'Team Geel' : 'Team Blauw';
+            const winnerHeart = isTeam1Winner ? '💛' : '💙';
+            
+            const team1Blocks = '🟨'.repeat(team1Wins);
+            const team2Blocks = '🟦'.repeat(team2Wins);
+            
+            return `*De uitslag is bekend!*
+Team Geel: ${team1Blocks} ${averages.team1}
+Team Blauw: ${team2Blocks} ${averages.team2}
+
+${winner} heeft gewonnen! ${winnerHeart}`;
+        }
+
+        async function copyScoreToClipboard() {
+            const scoreText = formatScoreText();
+            try {
+                await navigator.clipboard.writeText(scoreText);
+                const button = document.getElementById('copyScoreButton');
+                const originalText = button.textContent;
+                button.textContent = 'Gekopieerd! ✅';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                alert('Kon de score niet kopiëren. Probeer het opnieuw.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButton = document.getElementById('copyScoreButton');
+            if (copyButton) {
+                copyButton.addEventListener('click', copyScoreToClipboard);
+            }
+        });
+
         document.getElementById('startButton').addEventListener('click', async function() {
+            console.log('Start button clicked');
             this.disabled = true;
-            initSupabase(); // Initialize Supabase when the button is clicked
+            this.style.display = 'none'; // Hide the start button
+            
+            console.log('Initializing Supabase...');
+            initSupabase();
+            
+            console.log('Fetching scores...');
             await fetchScores();
+            
+            console.log('Starting category display...');
             currentCategoryIndex = 0;
             showCategory(currentCategoryIndex);
         });
