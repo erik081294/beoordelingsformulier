@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Scores</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -18,10 +19,17 @@
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .score-display {
+        .category-display {
             font-size: 24px;
             margin: 20px 0;
             text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease-out;
+        }
+        .category-display.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
         .team {
             margin: 20px 0;
@@ -32,9 +40,9 @@
         .team1 { border-left: 5px solid #007bff; }
         .team2 { border-left: 5px solid #28a745; }
         .button {
-            display: block;
+            display: inline-block;
             width: 200px;
-            margin: 20px auto;
+            margin: 20px 10px;
             padding: 10px 20px;
             background-color: #007bff;
             color: white;
@@ -47,12 +55,12 @@
         .button:hover {
             background-color: #0056b3;
         }
+        .button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
         .hidden {
             display: none;
-        }
-        .emoji {
-            font-size: 30px;
-            margin: 0 5px;
         }
         .winner {
             animation: winner 1s ease-in-out;
@@ -63,16 +71,35 @@
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
-        .counter {
-            font-size: 36px;
-            font-weight: bold;
-            color: #007bff;
+        .categories-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease-out;
         }
-        .stats {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #e9ecef;
-            border-radius: 8px;
+        .categories-table.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .categories-table th,
+        .categories-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .categories-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .winner-cell {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+        }
+        .buttons-container {
+            text-align: center;
         }
     </style>
 </head>
@@ -80,150 +107,198 @@
     <div class="container">
         <h1>Team Scores 🏆</h1>
         
-        <div id="rounds" class="hidden">
+        <div id="current-category" class="category-display">
+            <h2 id="category-name"></h2>
             <div class="team team1">
-                <h2>Team 1</h2>
+                <h3>Team 1</h3>
                 <div class="score-display" id="team1-score"></div>
             </div>
             
             <div class="team team2">
-                <h2>Team 2</h2>
+                <h3>Team 2</h3>
                 <div class="score-display" id="team2-score"></div>
             </div>
         </div>
 
-        <button class="button" id="showResults">Bekijk uitslag</button>
+        <div class="buttons-container">
+            <button class="button" id="startButton">Start</button>
+            <button class="button" id="nextButton" disabled>Volgende</button>
+        </div>
 
-        <div id="finalStats" class="stats hidden">
-            <h2>Eindresultaat 🎉</h2>
+        <table id="final-results" class="categories-table hidden">
+            <thead>
+                <tr>
+                    <th>Categorie</th>
+                    <th>Team 1</th>
+                    <th>Team 2</th>
+                    <th>Winnaar</th>
+                </tr>
+            </thead>
+            <tbody id="results-body">
+            </tbody>
+        </table>
+
+        <div id="final-winner" class="category-display hidden">
+            <h2>🏆 Eindwinnaar 🏆</h2>
             <div id="winner-announcement"></div>
-            <div id="team-averages"></div>
-            <h3>Beste beoordelaars per team:</h3>
-            <div id="best-scorers"></div>
-            <h3>Meest kritische beoordelaars per team:</h3>
-            <div id="worst-scorers"></div>
         </div>
     </div>
 
     <script>
+        let supabaseClient;
+
+        // Initialize Supabase client when environment variables are available
+        function initSupabase() {
+            if (!window.ENV) {
+                console.error('Environment variables not found');
+                return;
+            }
+            const { createClient } = supabase;
+            supabaseClient = createClient(window.ENV.SUPABASE_URL, window.ENV.SUPABASE_KEY);
+        }
+
+        const categories = [
+            { id: 'concept', name: 'Spelconcept', dbField: 'concept_score' },
+            { id: 'target', name: 'Doelgroep', dbField: 'target_score' },
+            { id: 'gameplay', name: 'Gameplay', dbField: 'gameplay_score' },
+            { id: 'unique', name: 'Unieke twist', dbField: 'unique_score' },
+            { id: 'technical', name: 'Technische haalbaarheid', dbField: 'technical_score' },
+            { id: 'challenge', name: 'Uitdagingen en moeilijkheid', dbField: 'challenge_score' },
+            { id: 'rewards', name: 'Beloningen en scoring', dbField: 'rewards_score' }
+        ];
+
+        let currentCategoryIndex = -1;
+        let scores = [];
+        let team1Wins = 0;
+        let team2Wins = 0;
+
+        async function fetchScores() {
+            const { data, error } = await supabaseClient
+                .from('scores')
+                .select('team_name, concept_score, target_score, gameplay_score, unique_score, technical_score, challenge_score, rewards_score');
+
+            if (error) {
+                console.error('Error fetching scores:', error);
+                return;
+            }
+
+            // Calculate averages per team per category
+            categories.forEach(category => {
+                const team1Scores = data.filter(row => row.team_name === 'team1').map(row => row[category.dbField]);
+                const team2Scores = data.filter(row => row.team_name === 'team2').map(row => row[category.dbField]);
+
+                const team1Avg = team1Scores.reduce((a, b) => a + b, 0) / team1Scores.length;
+                const team2Avg = team2Scores.reduce((a, b) => a + b, 0) / team2Scores.length;
+
+                scores.push({
+                    category: category.name,
+                    team1Score: team1Avg.toFixed(2),
+                    team2Score: team2Avg.toFixed(2)
+                });
+            });
+        }
+
         function getEmoji(score) {
-            if (score === 5) return '🤩';
-            if (score === 4) return '😄';
-            if (score === 3) return '🥲';
-            if (score === 2) return '😕';
+            score = parseFloat(score);
+            if (score >= 4.5) return '🤩';
+            if (score >= 3.5) return '😄';
+            if (score >= 2.5) return '🙂';
+            if (score >= 1.5) return '😕';
             return '😭';
         }
 
-        // Sample data structure (replace with actual data from your system)
-        const roundData = [
-            {
-                team1: { score: 4, emoji: '😄' },
-                team2: { score: 3, emoji: '😊' }
-            },
-            {
-                team1: { score: 2, emoji: '😕' },
-                team2: { score: 5, emoji: '🤩' }
-            },
-            // Add more rounds as needed
-        ];
-
-        const teamMembers = {
-            team1: [
-                { name: "Lid 1", scores: [4, 3, 2] },
-                { name: "Lid 2", scores: [3, 4, 5] }
-            ],
-            team2: [
-                { name: "Lid 3", scores: [2, 5, 4] },
-                { name: "Lid 4", scores: [3, 4, 3] }
-            ]
-        };
-
-        function animateCounter(element, finalValue, duration = 2000) {
-            let startTime = null;
-            const startValue = 0;
-
-            function animation(currentTime) {
-                if (!startTime) startTime = currentTime;
-                const progress = (currentTime - startTime) / duration;
-
-                if (progress < 1) {
-                    const currentValue = Math.floor(startValue + (finalValue - startValue) * progress);
-                    element.textContent = currentValue + ' ' + getEmoji(currentValue);
-                    requestAnimationFrame(animation);
-                } else {
-                    element.textContent = finalValue + ' ' + getEmoji(finalValue);
-                }
+        async function showCategory(index) {
+            if (index >= scores.length) {
+                showFinalResults();
+                return;
             }
 
-            requestAnimationFrame(animation);
-        }
-
-        function calculateStats() {
-            let team1Wins = 0;
-            let team2Wins = 0;
-            let team1Total = 0;
-            let team2Total = 0;
-
-            roundData.forEach(round => {
-                if (round.team1.score > round.team2.score) team1Wins++;
-                if (round.team2.score > round.team1.score) team2Wins++;
-                team1Total += round.team1.score;
-                team2Total += round.team2.score;
-            });
-
-            return {
-                winner: team1Wins > team2Wins ? "Team 1" : "Team 2",
-                team1Average: (team1Total / roundData.length).toFixed(1),
-                team2Average: (team2Total / roundData.length).toFixed(1)
-            };
-        }
-
-        document.getElementById('showResults').addEventListener('click', async function() {
-            document.getElementById('rounds').classList.remove('hidden');
+            const score = scores[index];
+            const categoryDisplay = document.getElementById('current-category');
+            categoryDisplay.classList.remove('visible');
             
-            for (let i = 0; i < roundData.length; i++) {
-                const round = roundData[i];
+            setTimeout(() => {
+                document.getElementById('category-name').textContent = score.category;
+                document.getElementById('team1-score').textContent = `${score.team1Score} ${getEmoji(score.team1Score)}`;
+                document.getElementById('team2-score').textContent = `${score.team2Score} ${getEmoji(score.team2Score)}`;
                 
-                // Animate Team 1 score
-                await new Promise(resolve => {
-                    animateCounter(
-                        document.getElementById('team1-score'),
-                        round.team1.score,
-                        1500
-                    );
-                    setTimeout(resolve, 2000);
-                });
-
-                // Animate Team 2 score
-                await new Promise(resolve => {
-                    animateCounter(
-                        document.getElementById('team2-score'),
-                        round.team2.score,
-                        1500
-                    );
-                    setTimeout(resolve, 2000);
-                });
+                categoryDisplay.classList.add('visible');
 
                 // Highlight winner
-                if (round.team1.score > round.team2.score) {
-                    document.querySelector('.team1').classList.add('winner');
-                } else if (round.team2.score > round.team1.score) {
-                    document.querySelector('.team2').classList.add('winner');
+                const team1 = document.querySelector('.team1');
+                const team2 = document.querySelector('.team2');
+                team1.classList.remove('winner');
+                team2.classList.remove('winner');
+
+                if (parseFloat(score.team1Score) > parseFloat(score.team2Score)) {
+                    team1.classList.add('winner');
+                    team1Wins++;
+                } else if (parseFloat(score.team2Score) > parseFloat(score.team1Score)) {
+                    team2.classList.add('winner');
+                    team2Wins++;
                 }
 
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                document.querySelectorAll('.team').forEach(team => team.classList.remove('winner'));
-            }
+                document.getElementById('nextButton').disabled = false;
+            }, 500);
+        }
 
-            // Show final stats
-            const stats = calculateStats();
-            document.getElementById('finalStats').classList.remove('hidden');
+        function showFinalResults() {
+            document.getElementById('current-category').classList.add('hidden');
+            document.getElementById('nextButton').classList.add('hidden');
+            
+            const resultsTable = document.getElementById('final-results');
+            const resultsBody = document.getElementById('results-body');
+            resultsBody.innerHTML = '';
+
+            scores.forEach(score => {
+                const row = document.createElement('tr');
+                const team1Score = parseFloat(score.team1Score);
+                const team2Score = parseFloat(score.team2Score);
+                
+                row.innerHTML = `
+                    <td>${score.category}</td>
+                    <td class="${team1Score > team2Score ? 'winner-cell' : ''}">${score.team1Score} ${getEmoji(score.team1Score)}</td>
+                    <td class="${team2Score > team1Score ? 'winner-cell' : ''}">${score.team2Score} ${getEmoji(score.team2Score)}</td>
+                    <td>${team1Score > team2Score ? 'Team 1' : (team2Score > team1Score ? 'Team 2' : 'Gelijkspel')}</td>
+                `;
+                resultsBody.appendChild(row);
+            });
+
+            // Add total row
+            const totalRow = document.createElement('tr');
+            totalRow.innerHTML = `
+                <td><strong>Totaal gewonnen rondes</strong></td>
+                <td><strong>${team1Wins}</strong></td>
+                <td><strong>${team2Wins}</strong></td>
+                <td><strong>${team1Wins > team2Wins ? 'Team 1' : (team2Wins > team1Wins ? 'Team 2' : 'Gelijkspel')}</strong></td>
+            `;
+            resultsBody.appendChild(totalRow);
+
+            resultsTable.classList.remove('hidden');
+            setTimeout(() => resultsTable.classList.add('visible'), 100);
+
+            // Show final winner
+            const finalWinner = document.getElementById('final-winner');
+            finalWinner.classList.remove('hidden');
             document.getElementById('winner-announcement').innerHTML = 
-                `<h3>🏆 ${stats.winner} heeft gewonnen! 🏆</h3>`;
-            document.getElementById('team-averages').innerHTML = 
-                `<p>Gemiddelde scores:<br>
-                Team 1: ${stats.team1Average}<br>
-                Team 2: ${stats.team2Average}</p>`;
+                `<h3>${team1Wins > team2Wins ? 'Team 1' : (team2Wins > team1Wins ? 'Team 2' : 'Gelijkspel')} 
+                 ${team1Wins !== team2Wins ? 'heeft gewonnen!' : ''} 
+                 (${team1Wins} vs ${team2Wins})</h3>`;
+            setTimeout(() => finalWinner.classList.add('visible'), 100);
+        }
+
+        document.getElementById('startButton').addEventListener('click', async function() {
+            this.disabled = true;
+            initSupabase(); // Initialize Supabase when the button is clicked
+            await fetchScores();
+            currentCategoryIndex = 0;
+            showCategory(currentCategoryIndex);
+        });
+
+        document.getElementById('nextButton').addEventListener('click', function() {
+            this.disabled = true;
+            currentCategoryIndex++;
+            showCategory(currentCategoryIndex);
         });
     </script>
 </body>
