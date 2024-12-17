@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Scores</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .score-display {
+            font-size: 24px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .team {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        .team1 { border-left: 5px solid #007bff; }
+        .team2 { border-left: 5px solid #28a745; }
+        .button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+        .emoji {
+            font-size: 30px;
+            margin: 0 5px;
+        }
+        .winner {
+            animation: winner 1s ease-in-out;
+            background-color: #e3f2fd;
+        }
+        @keyframes winner {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .counter {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stats {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Team Scores 🏆</h1>
+        
+        <div id="rounds" class="hidden">
+            <div class="team team1">
+                <h2>Team 1</h2>
+                <div class="score-display" id="team1-score"></div>
+            </div>
+            
+            <div class="team team2">
+                <h2>Team 2</h2>
+                <div class="score-display" id="team2-score"></div>
+            </div>
+        </div>
+
+        <button class="button" id="showResults">Bekijk uitslag</button>
+
+        <div id="finalStats" class="stats hidden">
+            <h2>Eindresultaat 🎉</h2>
+            <div id="winner-announcement"></div>
+            <div id="team-averages"></div>
+            <h3>Beste beoordelaars per team:</h3>
+            <div id="best-scorers"></div>
+            <h3>Meest kritische beoordelaars per team:</h3>
+            <div id="worst-scorers"></div>
+        </div>
+    </div>
+
+    <script>
+        function getEmoji(score) {
+            if (score === 5) return '🤩';
+            if (score === 4) return '😄';
+            if (score === 3) return '🥲';
+            if (score === 2) return '😕';
+            return '😭';
+        }
+
+        // Sample data structure (replace with actual data from your system)
+        const roundData = [
+            {
+                team1: { score: 4, emoji: '😄' },
+                team2: { score: 3, emoji: '😊' }
+            },
+            {
+                team1: { score: 2, emoji: '😕' },
+                team2: { score: 5, emoji: '🤩' }
+            },
+            // Add more rounds as needed
+        ];
+
+        const teamMembers = {
+            team1: [
+                { name: "Lid 1", scores: [4, 3, 2] },
+                { name: "Lid 2", scores: [3, 4, 5] }
+            ],
+            team2: [
+                { name: "Lid 3", scores: [2, 5, 4] },
+                { name: "Lid 4", scores: [3, 4, 3] }
+            ]
+        };
+
+        function animateCounter(element, finalValue, duration = 2000) {
+            let startTime = null;
+            const startValue = 0;
+
+            function animation(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const progress = (currentTime - startTime) / duration;
+
+                if (progress < 1) {
+                    const currentValue = Math.floor(startValue + (finalValue - startValue) * progress);
+                    element.textContent = currentValue + ' ' + getEmoji(currentValue);
+                    requestAnimationFrame(animation);
+                } else {
+                    element.textContent = finalValue + ' ' + getEmoji(finalValue);
+                }
+            }
+
+            requestAnimationFrame(animation);
+        }
+
+        function calculateStats() {
+            let team1Wins = 0;
+            let team2Wins = 0;
+            let team1Total = 0;
+            let team2Total = 0;
+
+            roundData.forEach(round => {
+                if (round.team1.score > round.team2.score) team1Wins++;
+                if (round.team2.score > round.team1.score) team2Wins++;
+                team1Total += round.team1.score;
+                team2Total += round.team2.score;
+            });
+
+            return {
+                winner: team1Wins > team2Wins ? "Team 1" : "Team 2",
+                team1Average: (team1Total / roundData.length).toFixed(1),
+                team2Average: (team2Total / roundData.length).toFixed(1)
+            };
+        }
+
+        document.getElementById('showResults').addEventListener('click', async function() {
+            document.getElementById('rounds').classList.remove('hidden');
+            
+            for (let i = 0; i < roundData.length; i++) {
+                const round = roundData[i];
+                
+                // Animate Team 1 score
+                await new Promise(resolve => {
+                    animateCounter(
+                        document.getElementById('team1-score'),
+                        round.team1.score,
+                        1500
+                    );
+                    setTimeout(resolve, 2000);
+                });
+
+                // Animate Team 2 score
+                await new Promise(resolve => {
+                    animateCounter(
+                        document.getElementById('team2-score'),
+                        round.team2.score,
+                        1500
+                    );
+                    setTimeout(resolve, 2000);
+                });
+
+                // Highlight winner
+                if (round.team1.score > round.team2.score) {
+                    document.querySelector('.team1').classList.add('winner');
+                } else if (round.team2.score > round.team1.score) {
+                    document.querySelector('.team2').classList.add('winner');
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                document.querySelectorAll('.team').forEach(team => team.classList.remove('winner'));
+            }
+
+            // Show final stats
+            const stats = calculateStats();
+            document.getElementById('finalStats').classList.remove('hidden');
+            document.getElementById('winner-announcement').innerHTML = 
+                `<h3>🏆 ${stats.winner} heeft gewonnen! 🏆</h3>`;
+            document.getElementById('team-averages').innerHTML = 
+                `<p>Gemiddelde scores:<br>
+                Team 1: ${stats.team1Average}<br>
+                Team 2: ${stats.team2Average}</p>`;
+        });
+    </script>
+</body>
+</html>

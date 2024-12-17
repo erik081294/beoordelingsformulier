@@ -14,6 +14,12 @@ export default defineConfig({
         'process.env.SUPABASE_KEY': JSON.stringify(process.env.SUPABASE_KEY)
     },
     build: {
-        outDir: '../dist'
+        outDir: '../dist',
+        rollupOptions: {
+            input: {
+                main: resolve(__dirname, 'src/index.html'),
+                score: resolve(__dirname, 'src/score/index.html')
+            }
+        }
     }
 }); 
