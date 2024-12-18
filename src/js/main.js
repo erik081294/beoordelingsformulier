@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const formData = {
             evaluator_name: document.getElementById('evaluatorName').value,
-            team: document.getElementById('teamSelect').value,
+            team_name: document.getElementById('teamSelect').value,
             concept_score: parseInt(document.querySelector('input[name="concept"]:checked').value),
             target_score: parseInt(document.querySelector('input[name="target"]:checked').value),
             gameplay_score: parseInt(document.querySelector('input[name="gameplay"]:checked').value),
@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             technical_score: parseInt(document.querySelector('input[name="technical"]:checked').value),
             challenge_score: parseInt(document.querySelector('input[name="challenge"]:checked').value),
             rewards_score: parseInt(document.querySelector('input[name="rewards"]:checked').value),
+            comment: document.getElementById('comment').value,
             created_at: new Date().toISOString()
         };
 

@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         window.ENV = {
             SUPABASE_URL: 'https://jcwfcyddmvhnquwierds.supabase.co',
@@ -389,6 +390,172 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .detailed-results-expander {
+            width: 100%;
+            margin-top: calc(var(--spacing-unit) * 6);
+        }
+
+        .expand-button {
+            width: 100%;
+            margin-bottom: calc(var(--spacing-unit) * 4);
+        }
+
+        .detailed-results {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .detailed-results.visible {
+            opacity: 1;
+            max-height: 2000px;
+        }
+
+        .team-results {
+            margin-bottom: calc(var(--spacing-unit) * 6);
+        }
+
+        .team-results h4 {
+            font-size: 1.25rem;
+            margin-bottom: calc(var(--spacing-unit) * 3);
+            text-align: left;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .detailed-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .detailed-table th,
+        .detailed-table td {
+            padding: calc(var(--spacing-unit) * 1.5);
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .detailed-table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .detailed-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .detailed-table .average-row {
+            font-weight: 600;
+            background-color: #f8fafc;
+        }
+
+        .detailed-table .average-row td {
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .winner-announcement {
+            text-align: center;
+            padding: calc(var(--spacing-unit) * 4);
+            border-radius: var(--border-radius);
+            margin-bottom: calc(var(--spacing-unit) * 4);
+        }
+
+        .winner-announcement.team1 {
+            background-color: #fef9c3;
+            border: 2px solid var(--team1-color);
+        }
+
+        .winner-announcement.team2 {
+            background-color: #eff6ff;
+            border: 2px solid var(--team2-color);
+        }
+
+        .winner-announcement.draw {
+            background-color: #f8fafc;
+            border: 2px solid var(--text-secondary);
+        }
+
+        .winner-announcement .winner-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: calc(var(--spacing-unit) * 2);
+        }
+
+        .winner-announcement .win-reason {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .winner-announcement .scores {
+            margin-top: calc(var(--spacing-unit) * 3);
+            font-size: 1.125rem;
+            color: var(--text-primary);
+        }
+
+        .feedback-summary-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .feedback-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .copy-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            transition: all 0.2s ease;
+        }
+
+        .copy-button:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        #feedbackSummary .individual-feedback {
+            margin-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1rem;
+        }
+
+        #feedbackSummary .individual-feedback h3 {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        #feedbackSummary .feedback-item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #feedbackSummary .feedback-item .meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #feedbackSummary .feedback-item .comment {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -429,11 +596,72 @@
         </table>
 
         <div id="final-winner" class="category-display hidden">
-            <h2>🏆 Eindwinnaar 🏆</h2>
+            <h2>Eindwinnaar 🏆</h2>
             <div id="winner-announcement"></div>
             <button class="button" id="copyScoreButton" style="margin-top: 24px;">
                 Kopieer Score 📋
             </button>
+        </div>
+        <div class="feedback-summary-container" style="margin-top: 2rem; display: none;">
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
+                <button id="summarizeFeedbackYellow" class="button" style="background-color: var(--team1-color)">
+                    Feedback Team Geel 💛
+                </button>
+                <button id="summarizeFeedbackBlue" class="button" style="background-color: var(--team2-color)">
+                    Feedback Team Blauw 💙
+                </button>
+            </div>
+            <div id="feedbackSummary" style="margin-top: 1rem; padding: 2rem; background-color: #f8fafc; border-radius: 8px; line-height: 1.6;">
+                <style>
+                    #feedbackSummary h1, #feedbackSummary h2, #feedbackSummary h3 { 
+                        margin-top: 1.5em;
+                        margin-bottom: 0.5em;
+                        color: var(--text-primary);
+                    }
+                    #feedbackSummary h1:first-child, #feedbackSummary h2:first-child, #feedbackSummary h3:first-child {
+                        margin-top: 0;
+                    }
+                    #feedbackSummary p {
+                        margin-bottom: 1em;
+                    }
+                    #feedbackSummary ul, #feedbackSummary ol {
+                        margin-bottom: 1em;
+                        padding-left: 2em;
+                    }
+                    #feedbackSummary li {
+                        margin-bottom: 0.5em;
+                    }
+                    #feedbackSummary strong {
+                        color: var(--text-primary);
+                    }
+                    #feedbackSummary em {
+                        color: var(--text-secondary);
+                    }
+                    .feedback-header {
+                        display: flex;
+                        align-items: center;
+                        gap: 1rem;
+                        margin-bottom: 1.5rem;
+                    }
+                    .copy-button {
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        font-size: 1.2rem;
+                        padding: 0.5rem;
+                        border-radius: var(--border-radius);
+                        transition: all 0.2s ease;
+                    }
+                    .copy-button:hover {
+                        background-color: rgba(0, 0, 0, 0.05);
+                    }
+                </style>
+                <div class="feedback-header">
+                    <h2 id="feedbackTitle"></h2>
+                    <button class="copy-button" onclick="copyFeedback()" title="Kopieer feedback">📋</button>
+                </div>
+                <div id="feedbackContent"></div>
+            </div>
         </div>
     </div>
 
@@ -441,7 +669,7 @@
         let supabaseClient;
 
         // Initialize Supabase client when environment variables are available
-        function initSupabase() {
+        async function initSupabase() {
             console.log('Initializing Supabase...');
             console.log('window.ENV:', window.ENV);
             
@@ -469,6 +697,9 @@
                 
                 supabaseClient = supabase.createClient(window.ENV.SUPABASE_URL, window.ENV.SUPABASE_KEY);
                 console.log('Supabase client created successfully');
+                
+                // Show feedback container after successful initialization
+                document.querySelector('.feedback-summary-container').style.display = 'block';
             } catch (error) {
                 console.error('Error creating Supabase client:', error);
             }
@@ -489,6 +720,7 @@
         let team1Wins = 0;
         let team2Wins = 0;
         let evaluatorStats = [];
+        let rawEvaluationData = [];
 
         async function fetchScores() {
             console.log('Fetching scores...');
@@ -501,12 +733,14 @@
                 console.log('Making Supabase query...');
                 const { data, error } = await supabaseClient
                     .from('evaluations')
-                    .select('evaluator_name, team_name, concept_score, target_score, gameplay_score, unique_score, technical_score, challenge_score, rewards_score');
+                    .select('*');  // Select all columns
 
                 if (error) {
                     console.error('Error fetching scores:', error);
                     return;
                 }
+
+                rawEvaluationData = data; // Store the raw data
 
                 console.log('Received data:', data);
 
@@ -560,7 +794,7 @@
             if (isWinner) return '🥳';
             
             score = parseFloat(score);
-            if (score >= 4.5) return '🤩';
+            if (score >= 4.5) return '👍';
             if (score >= 3.5) return '😄';
             if (score >= 2.5) return '🙂';
             if (score >= 1.5) return '😕';
@@ -640,6 +874,15 @@
             const categoryDisplay = document.getElementById('current-category');
             categoryDisplay.classList.remove('visible');
             
+            // Determine winner immediately
+            const team1Score = parseFloat(score.team1Score);
+            const team2Score = parseFloat(score.team2Score);
+            if (team1Score > team2Score) {
+                team1Wins++;
+            } else if (team2Score > team1Score) {
+                team2Wins++;
+            }
+            
             setTimeout(() => {
                 const category = categories.find(c => c.name === score.category);
                 document.getElementById('category-name').innerHTML = `${category.emoji} ${score.category}`;
@@ -661,11 +904,6 @@
                 team1.classList.remove('winner');
                 team2.classList.remove('winner');
 
-                const team1Score = parseFloat(score.team1Score);
-                const team2Score = parseFloat(score.team2Score);
-                const team1IsWinner = team1Score > team2Score;
-                const team2IsWinner = team2Score > team1Score;
-
                 // Start animations with regular emojis
                 animateCounter(team1ScoreElement, team1Score);
                 
@@ -675,13 +913,11 @@
                     
                     // Show winner after both scores are revealed and animations are complete
                     setTimeout(() => {
-                        if (team1IsWinner) {
+                        if (team1Score > team2Score) {
                             team1.classList.add('winner');
-                            team1Wins++;
                             team1ScoreElement.textContent = `${team1Score} 🥳`;
-                        } else if (team2IsWinner) {
+                        } else if (team2Score > team1Score) {
                             team2.classList.add('winner');
-                            team2Wins++;
                             // Wait for team 2's animation to complete before showing winner emoji
                             setTimeout(() => {
                                 team2ScoreElement.textContent = `${team2Score} 🥳`;
@@ -719,11 +955,18 @@
 
             // Add total row
             const totalRow = document.createElement('tr');
+            const averages = calculateAverageScores();
             totalRow.innerHTML = `
-                <td><strong>🎯 Totaal gewonnen rondes</strong></td>
-                <td><strong style="color: var(--team1-color)">${team1Wins}</strong></td>
-                <td><strong style="color: var(--team2-color)">${team2Wins}</strong></td>
-                <td><strong>${team1Wins > team2Wins ? '<span style="color: var(--team1-color)">Team Geel</span>' : (team2Wins > team1Wins ? '<span style="color: var(--team2-color)">Team Blauw</span>' : 'Gelijkspel')}</strong></td>
+                <td><strong>🎯 Totaal</strong></td>
+                <td>
+                    <strong style="color: var(--team1-color)">${team1Wins} rondes</strong><br>
+                    <span style="color: var(--text-secondary); font-size: 0.85em;">${averages.team1} gem.</span>
+                </td>
+                <td>
+                    <strong style="color: var(--team2-color)">${team2Wins} rondes</strong><br>
+                    <span style="color: var(--text-secondary); font-size: 0.85em;">${averages.team2} gem.</span>
+                </td>
+                <td><strong>${determineWinner()}</strong></td>
             `;
             resultsBody.appendChild(totalRow);
 
@@ -739,10 +982,9 @@
             const mostPositive = evaluatorStats[0];
             const mostNegative = evaluatorStats[evaluatorStats.length - 1];
 
+            const winnerText = determineWinnerWithReason();
             document.getElementById('winner-announcement').innerHTML = `
-                <h3>${team1Wins > team2Wins ? '<span style="color: var(--team1-color)">Team Geel</span> 🏆' : (team2Wins > team1Wins ? '<span style="color: var(--team2-color)">Team Blauw</span> 🏆' : 'Gelijkspel 🤝')} 
-                ${team1Wins !== team2Wins ? 'heeft gewonnen!' : ''} 
-                (${team1Wins} vs ${team2Wins})</h3>
+                <h3>${winnerText}</h3>
                 <div class="evaluator-cards">
                     <div class="evaluator-card positive">
                         <div class="emoji">🌟</div>
@@ -765,6 +1007,58 @@
                             <span>Stemde op:</span>
                             <strong style="color: ${mostNegative.team === 'yellow' ? 'var(--team1-color)' : 'var(--team2-color)'}">${mostNegative.team === 'yellow' ? 'Team Geel' : 'Team Blauw'}</strong>
                             ${mostNegative.team === 'yellow' ? '👥' : '👥'}
+                        </div>
+                    </div>
+                </div>
+                <div class="detailed-results-expander">
+                    <button class="button expand-button" onclick="toggleDetailedResults()">
+                        Toon alle beoordelingen 📊
+                    </button>
+                    <div id="detailed-results" class="detailed-results hidden">
+                        <div class="team-results" id="team-yellow-results">
+                            <h4>Over Team Geel 💛</h4>
+                            <div class="table-container">
+                                <table class="detailed-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Beoordelaar</th>
+                                            <th>Concept</th>
+                                            <th>Doelgroep</th>
+                                            <th>Gameplay</th>
+                                            <th>Unieke twist</th>
+                                            <th>Technisch</th>
+                                            <th>Uitdaging</th>
+                                            <th>Beloningen</th>
+                                            <th>Gemiddeld</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="team-yellow-details">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="team-results" id="team-blue-results">
+                            <h4>Over Team Blauw 💙</h4>
+                            <div class="table-container">
+                                <table class="detailed-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Beoordelaar</th>
+                                            <th>Concept</th>
+                                            <th>Doelgroep</th>
+                                            <th>Gameplay</th>
+                                            <th>Unieke twist</th>
+                                            <th>Technisch</th>
+                                            <th>Uitdaging</th>
+                                            <th>Beloningen</th>
+                                            <th>Gemiddeld</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="team-blue-details">
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -791,20 +1085,95 @@
             };
         }
 
+        function determineWinner() {
+            const averages = calculateAverageScores();
+            if (team1Wins > team2Wins) {
+                return '<span style="color: var(--team1-color)">Team Geel</span>';
+            } else if (team2Wins > team1Wins) {
+                return '<span style="color: var(--team2-color)">Team Blauw</span>';
+            } else {
+                // Use average as tiebreaker
+                if (parseFloat(averages.team1) > parseFloat(averages.team2)) {
+                    return '<span style="color: var(--team1-color)">Team Geel</span> (hoogste gemiddelde)';
+                } else if (parseFloat(averages.team2) > parseFloat(averages.team1)) {
+                    return '<span style="color: var(--team2-color)">Team Blauw</span> (hoogste gemiddelde)';
+                } else {
+                    return 'Gelijkspel';
+                }
+            }
+        }
+
+        function determineWinnerWithReason() {
+            const averages = calculateAverageScores();
+            let winnerClass = '';
+            let winnerName = '';
+            let winReason = '';
+            let scores = '';
+
+            if (team1Wins > team2Wins) {
+                winnerClass = 'team1';
+                winnerName = 'Team Geel 🏆';
+                winReason = `${team1Wins} tegen ${team2Wins} gewonnen rondes`;
+                scores = `Gemiddelde score: ${averages.team1} vs ${averages.team2}`;
+            } else if (team2Wins > team1Wins) {
+                winnerClass = 'team2';
+                winnerName = 'Team Blauw 🏆';
+                winReason = `${team2Wins} tegen ${team1Wins} gewonnen rondes`;
+                scores = `Gemiddelde score: ${averages.team2} vs ${averages.team1}`;
+            } else {
+                // Use average as tiebreaker
+                if (parseFloat(averages.team1) > parseFloat(averages.team2)) {
+                    winnerClass = 'team1';
+                    winnerName = 'Team Geel 🏆';
+                    winReason = 'Gewonnen door een hoger gemiddelde';
+                    scores = `${averages.team1} vs ${averages.team2}`;
+                } else if (parseFloat(averages.team2) > parseFloat(averages.team1)) {
+                    winnerClass = 'team2';
+                    winnerName = 'Team Blauw 🏆';
+                    winReason = 'Gewonnen door een hoger gemiddelde';
+                    scores = `${averages.team2} vs ${averages.team1}`;
+                } else {
+                    winnerClass = 'draw';
+                    winnerName = 'Gelijkspel! 🤝';
+                    winReason = 'Gelijk aantal rondes en gelijk gemiddelde';
+                    scores = `${averages.team1} gemiddeld`;
+                }
+            }
+
+            return `
+                <div class="winner-announcement ${winnerClass}">
+                    <div class="winner-name">${winnerName}</div>
+                    <div class="win-reason">${winReason}</div>
+                    <div class="scores">${scores}</div>
+                </div>
+            `;
+        }
+
         function formatScoreText() {
             const averages = calculateAverageScores();
-            const isTeam1Winner = team1Wins > team2Wins || (team1Wins === team2Wins && parseFloat(averages.team1) > parseFloat(averages.team2));
-            const winner = isTeam1Winner ? 'Team Geel' : 'Team Blauw';
-            const winnerHeart = isTeam1Winner ? '💛' : '💙';
-            
             const team1Blocks = '🟨'.repeat(team1Wins);
             const team2Blocks = '🟦'.repeat(team2Wins);
             
+            let winnerText;
+            if (team1Wins > team2Wins) {
+                winnerText = `Team Geel heeft gewonnen met ${team1Wins} vs ${team2Wins} rondes! 💛`;
+            } else if (team2Wins > team1Wins) {
+                winnerText = `Team Blauw heeft gewonnen met ${team2Wins} vs ${team1Wins} rondes! 💙`;
+            } else {
+                if (parseFloat(averages.team1) > parseFloat(averages.team2)) {
+                    winnerText = `Team Geel heeft gewonnen door een hoger gemiddelde! 💛`;
+                } else if (parseFloat(averages.team2) > parseFloat(averages.team1)) {
+                    winnerText = `Team Blauw heeft gewonnen door een hoger gemiddelde! 💙`;
+                } else {
+                    winnerText = 'Volledig gelijkspel! 🤝';
+                }
+            }
+            
             return `*De uitslag is bekend!*
-Team Geel: ${team1Blocks} ${averages.team1}
-Team Blauw: ${team2Blocks} ${averages.team2}
+Team Geel: ${team1Blocks} ${averages.team1} gemiddeld
+Team Blauw: ${team2Blocks} ${averages.team2} gemiddeld
 
-${winner} heeft gewonnen! ${winnerHeart}`;
+${winnerText}`;
         }
 
         async function copyScoreToClipboard() {
@@ -836,7 +1205,7 @@ ${winner} heeft gewonnen! ${winnerHeart}`;
             this.style.display = 'none'; // Hide the start button
             
             console.log('Initializing Supabase...');
-            initSupabase();
+            await initSupabase();
             
             console.log('Fetching scores...');
             await fetchScores();
@@ -851,6 +1220,243 @@ ${winner} heeft gewonnen! ${winnerHeart}`;
             currentCategoryIndex++;
             showCategory(currentCategoryIndex);
         });
+
+        function toggleDetailedResults() {
+            const detailedResults = document.getElementById('detailed-results');
+            const button = document.querySelector('.expand-button');
+            
+            if (detailedResults.classList.contains('visible')) {
+                detailedResults.classList.remove('visible');
+                button.textContent = 'Toon alle beoordelingen 📊';
+            } else {
+                detailedResults.classList.add('visible');
+                button.textContent = 'Verberg beoordelingen 📊';
+                populateDetailedResults();
+            }
+        }
+
+        function populateDetailedResults() {
+            const yellowDetails = document.getElementById('team-yellow-details');
+            const blueDetails = document.getElementById('team-blue-details');
+            
+            // Clear existing content
+            yellowDetails.innerHTML = '';
+            blueDetails.innerHTML = '';
+            
+            // Group data by team
+            const yellowTeam = rawEvaluationData.filter(d => d.team_name === 'yellow');
+            const blueTeam = rawEvaluationData.filter(d => d.team_name === 'blue');
+            
+            // Helper function to calculate average
+            const calculateAverage = scores => scores.reduce((a, b) => a + b, 0) / scores.length;
+            
+            // Helper function to populate team table
+            function populateTeamTable(data, tableBody) {
+                // Add individual rows
+                data.forEach(entry => {
+                    const scores = [
+                        entry.concept_score,
+                        entry.target_score,
+                        entry.gameplay_score,
+                        entry.unique_score,
+                        entry.technical_score,
+                        entry.challenge_score,
+                        entry.rewards_score
+                    ];
+                    const average = calculateAverage(scores);
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${entry.evaluator_name}</td>
+                        ${scores.map(score => `<td>${score.toFixed(1)}</td>`).join('')}
+                        <td><strong>${average.toFixed(2)}</strong></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // Add average row
+                if (data.length > 0) {
+                    const averages = [
+                        calculateAverage(data.map(d => d.concept_score)),
+                        calculateAverage(data.map(d => d.target_score)),
+                        calculateAverage(data.map(d => d.gameplay_score)),
+                        calculateAverage(data.map(d => d.unique_score)),
+                        calculateAverage(data.map(d => d.technical_score)),
+                        calculateAverage(data.map(d => d.challenge_score)),
+                        calculateAverage(data.map(d => d.rewards_score))
+                    ];
+                    const totalAverage = calculateAverage(averages);
+                    
+                    const averageRow = document.createElement('tr');
+                    averageRow.className = 'average-row';
+                    averageRow.innerHTML = `
+                        <td>Gemiddeld</td>
+                        ${averages.map(avg => `<td>${avg.toFixed(2)}</td>`).join('')}
+                        <td><strong>${totalAverage.toFixed(2)}</strong></td>
+                    `;
+                    tableBody.appendChild(averageRow);
+                }
+            }
+            
+            populateTeamTable(yellowTeam, yellowDetails);
+            populateTeamTable(blueTeam, blueDetails);
+        }
+
+        async function initializeFeedbackSummary() {
+            const summaryYellowButton = document.getElementById('summarizeFeedbackYellow');
+            const summaryBlueButton = document.getElementById('summarizeFeedbackBlue');
+            const summaryContainer = document.getElementById('feedbackSummary');
+
+            async function handleFeedbackSummary(teamName, button) {
+                try {
+                    button.disabled = true;
+                    button.textContent = 'Bezig met samenvatten...';
+                    
+                    const feedbackItems = rawEvaluationData.filter(d => d.team_name === teamName);
+                    console.log('Preparing to send feedback items:', feedbackItems);
+
+                    // Log the exact request we're about to make
+                    const requestBody = { feedbackItems };
+                    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+                    const { data, error } = await supabaseClient.functions.invoke(
+                        'summarize-feedback',
+                        {
+                            body: requestBody
+                        }
+                    );
+
+                    console.log('Raw response:', { data, error });
+
+                    if (error) {
+                        console.error('Supabase function error:', error);
+                        console.error('Error details:', {
+                            message: error.message,
+                            context: error.context,
+                            stack: error.stack
+                        });
+                        throw error;
+                    }
+
+                    if (!data || !data.summary) {
+                        console.error('Invalid response format:', data);
+                        throw new Error('Ongeldig antwoord van de server');
+                    }
+
+                    // Use marked to convert Markdown to HTML
+                    const title = `# Feedback ${teamName === 'yellow' ? 'Team Geel 💛' : 'Team Blauw 💙'}\n\n`;
+                    document.getElementById('feedbackTitle').textContent = title.replace('#', '').trim();
+                    document.getElementById('feedbackContent').innerHTML = marked.parse(data.summary);
+
+                    // Add individual feedback comments
+                    const individualFeedback = document.createElement('div');
+                    individualFeedback.className = 'individual-feedback';
+                    
+                    // Create header for individual feedback
+                    const feedbackHeader = document.createElement('h3');
+                    feedbackHeader.textContent = 'Individuele beoordelingen';
+                    individualFeedback.appendChild(feedbackHeader);
+
+                    // Add each individual feedback
+                    feedbackItems.forEach(item => {
+                        const scores = [
+                            item.concept_score,
+                            item.target_score,
+                            item.gameplay_score,
+                            item.unique_score,
+                            item.technical_score,
+                            item.challenge_score,
+                            item.rewards_score
+                        ];
+                        const averageScore = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+
+                        const feedbackItem = document.createElement('div');
+                        feedbackItem.className = 'feedback-item';
+                        
+                        const meta = document.createElement('div');
+                        meta.className = 'meta';
+                        meta.textContent = `${item.evaluator_name} - Gemiddelde score: ${averageScore}`;
+                        
+                        const comment = document.createElement('div');
+                        comment.className = 'comment';
+                        comment.textContent = item.comment || 'Geen geschreven feedback gegeven';
+
+                        feedbackItem.appendChild(meta);
+                        feedbackItem.appendChild(comment);
+                        individualFeedback.appendChild(feedbackItem);
+                    });
+
+                    document.getElementById('feedbackContent').appendChild(individualFeedback);
+                } catch (error) {
+                    console.error('Full error details:', {
+                        message: error.message,
+                        name: error.name,
+                        stack: error.stack,
+                        context: error.context
+                    });
+                    document.getElementById('feedbackTitle').textContent = 'Error';
+                    document.getElementById('feedbackContent').innerHTML = `<p style="color: var(--danger-color)">Er is een fout opgetreden bij het genereren van de samenvatting:<br>${error.message || 'Onbekende fout'}</p>`;
+                } finally {
+                    button.disabled = false;
+                    button.textContent = teamName === 'yellow' ? 'Feedback Team Geel 💛' : 'Feedback Team Blauw 💙';
+                }
+            }
+
+            summaryYellowButton.addEventListener('click', () => handleFeedbackSummary('yellow', summaryYellowButton));
+            summaryBlueButton.addEventListener('click', () => handleFeedbackSummary('blue', summaryBlueButton));
+        }
+
+        // Voeg deze regel toe aan de bestaande DOMContentLoaded handler
+        document.addEventListener('DOMContentLoaded', function() {
+            // ... bestaande code ...
+            initializeFeedbackSummary();
+        });
+
+        // Add this new function for copying feedback
+        async function copyFeedback() {
+            const title = document.getElementById('feedbackTitle').textContent;
+            const content = document.getElementById('feedbackContent');
+            
+            // Get the AI summary (everything before the individual feedback section)
+            const aiSummary = Array.from(content.childNodes)
+                .filter(node => !node.classList?.contains('individual-feedback'))
+                .map(node => node.textContent)
+                .join('\n\n');
+
+            // Get individual feedback items
+            const individualFeedback = content.querySelector('.individual-feedback');
+            let individualFeedbackText = '';
+            
+            if (individualFeedback) {
+                individualFeedbackText = '\n\n' + individualFeedback.querySelector('h3').textContent + '\n';
+                const feedbackItems = individualFeedback.querySelectorAll('.feedback-item');
+                
+                feedbackItems.forEach((item, index) => {
+                    const meta = item.querySelector('.meta').textContent;
+                    const comment = item.querySelector('.comment').textContent;
+                    individualFeedbackText += `\n${meta}\n${comment}`;
+                    
+                    // Add extra line break between feedback items
+                    if (index < feedbackItems.length - 1) {
+                        individualFeedbackText += '\n';
+                    }
+                });
+            }
+
+            const fullText = `${title}\n\n${aiSummary}${individualFeedbackText}`;
+            
+            try {
+                await navigator.clipboard.writeText(fullText);
+                const copyButton = document.querySelector('.copy-button');
+                copyButton.textContent = '✅';
+                setTimeout(() => {
+                    copyButton.textContent = '📋';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                alert('Kon de feedback niet kopiëren. Probeer het opnieuw.');
+            }
+        }
     </script>
 </body>
 </html>

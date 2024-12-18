@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "strict": true,
+    "types": ["deno"]
+  },
+  "importMap": "./import_map.json"
+}
